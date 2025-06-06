@@ -1,3 +1,8 @@
+"""
+A simple Flask application that integrates with OpenAI's API to handle email-related
+tasks.
+"""
+
 import os
 import re
 from flask import Flask, render_template, request, redirect, url_for, session
@@ -10,7 +15,11 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 if not app.secret_key:
-    raise RuntimeError("SECRET_KEY environment variable is not set. Please set it to a strong, secure value.")
+    raise RuntimeError(
+        "SECRET_KEY environment variable is not set. "
+        "Please set it to a strong, secure value."
+    )
+
 
 # Simple markdown renderer for basic formatting
 @app.template_filter("markdown")
@@ -49,10 +58,21 @@ def render_markdown(text: str) -> Markup:
 
     return Markup("<br>".join(processed))
 
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 BEARER_TOKEN = os.getenv("BEARER_TOKEN")
 FASTMAIL_API_KEY = os.getenv("FASTMAIL_API_KEY")
 MCP_SERVER_URL = os.getenv("MCP_SERVER_URL")
+
+# Validate environment variables
+if not OPENAI_API_KEY:
+    raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
+if not BEARER_TOKEN:
+    raise RuntimeError("BEARER_TOKEN environment variable is not set.")
+if not FASTMAIL_API_KEY:
+    raise RuntimeError("FASTMAIL_API_KEY environment variable is not set.")
+if not MCP_SERVER_URL:
+    raise RuntimeError("MCP_SERVER_URL environment variable is not set.")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -69,8 +89,10 @@ TOOLS = [
     }
 ]
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
+    """Main route for the application."""
     if request.method == "POST":
         if request.form.get("action") == "clear":
             session.pop("previous_response_id", None)
@@ -100,4 +122,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="127.0.0.1", port=5000)
