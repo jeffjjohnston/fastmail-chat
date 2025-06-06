@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fastmail Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .message { margin-bottom: 1em; }
+        .user { font-weight: bold; }
+        form { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Fastmail Chat</h1>
+    {% for item in history %}
+        <div class="message">
+            <div class="user">You:</div>
+            <div>{{ item.user }}</div>
+            <div class="user">Assistant:</div>
+            <div>{{ item.assistant }}</div>
+        </div>
+    {% endfor %}
+    <form method="post">
+        <textarea name="message" rows="3" cols="60" required></textarea><br>
+        <button type="submit">Send</button>
+        <button type="submit" name="action" value="clear">Clear Conversation</button>
+    </form>
+</body>
+</html>
