@@ -14,6 +14,8 @@
         form { display: flex; gap: 10px; margin-top: 20px; max-width: 700px; margin-left: auto; margin-right: auto; }
         textarea { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
         button { border: none; border-radius: 5px; padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .reasoning-icon { margin-left: 5px; cursor: pointer; }
+        .reasoning-summary { display: none; background: #ffffff; border: 1px solid #ccc; border-radius: 5px; padding: 5px; margin-top: 5px; font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -24,7 +26,17 @@
             <div class="bubble user">{{ item.user | e }}</div>
         </div>
         <div class="message">
-            <div class="bubble assistant">{{ item.assistant | markdown }}</div>
+            <div class="bubble assistant">
+                {{ item.assistant | markdown }}
+                {% if item.reasoning and item.reasoning|length > 0 %}
+                <span class="reasoning-icon" onclick="toggleReasoning(this)">💭</span>
+                <div class="reasoning-summary">
+                    {% for text in item.reasoning %}
+                        <p>{{ text | markdown }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
         </div>
     {% endfor %}
     </div>
@@ -33,5 +45,15 @@
         <button type="submit" class="send-btn">✉️<span>Send</span></button>
         <button type="submit" name="action" value="clear" formnovalidate class="clear-btn">🗑️<span>Clear</span></button>
     </form>
+    <script>
+        function toggleReasoning(el) {
+            const summary = el.nextElementSibling;
+            if (summary.style.display === 'none' || summary.style.display === '') {
+                summary.style.display = 'block';
+            } else {
+                summary.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
