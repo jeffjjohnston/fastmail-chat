@@ -6,7 +6,9 @@ from openai import OpenAI
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "change-me")
+app.secret_key = os.getenv("SECRET_KEY")
+if not app.secret_key:
+    raise RuntimeError("SECRET_KEY environment variable is not set. Please set it to a strong, secure value.")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 BEARER_TOKEN = os.getenv("BEARER_TOKEN")
