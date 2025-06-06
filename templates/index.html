@@ -5,24 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fastmail Chat</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .message { margin-bottom: 1em; }
-        .user { font-weight: bold; }
-        form { margin-top: 20px; }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .chat-container { max-width: 700px; margin: 0 auto; }
+        .message { display: flex; margin-bottom: 10px; }
+        .bubble { padding: 10px; border-radius: 10px; max-width: 70%; }
+        .user { background: #dcf8c6; margin-left: auto; text-align: right; }
+        .assistant { background: #f1f0f0; margin-right: auto; }
+        form { display: flex; gap: 10px; margin-top: 20px; }
+        textarea { flex: 1; padding: 10px; }
     </style>
 </head>
 <body>
     <h1>Fastmail Chat</h1>
+    <div class="chat-container">
     {% for item in history %}
         <div class="message">
-            <div class="user">You:</div>
-            <div>{{ item.user }}</div>
-            <div class="user">Assistant:</div>
-            <div>{{ item.assistant }}</div>
+            <div class="bubble user">{{ item.user | e }}</div>
+        </div>
+        <div class="message">
+            <div class="bubble assistant">{{ item.assistant | markdown }}</div>
         </div>
     {% endfor %}
+    </div>
     <form method="post">
-        <textarea name="message" rows="3" cols="60" required></textarea><br>
+        <textarea name="message" rows="3" required></textarea>
         <button type="submit">Send</button>
         <button type="submit" name="action" value="clear">Clear Conversation</button>
     </form>
