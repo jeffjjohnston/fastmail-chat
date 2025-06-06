@@ -8,6 +8,7 @@ import re
 from flask import Flask, render_template, request, redirect, url_for, session
 from dotenv import load_dotenv
 from openai import OpenAI
+from openai.types.responses.tool_param import Mcp
 from markupsafe import Markup, escape
 
 load_dotenv()
@@ -77,16 +78,16 @@ if not MCP_SERVER_URL:
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 TOOLS = [
-    {
-        "type": "mcp",
-        "server_label": "Email",
-        "server_url": MCP_SERVER_URL,
-        "require_approval": "never",
-        "headers": {
+    Mcp(
+        type="mcp",
+        server_label="Email",
+        server_url=MCP_SERVER_URL,
+        require_approval="never",
+        headers={
             "Authorization": f"Bearer {BEARER_TOKEN}",
             "fastmail-api-token": FASTMAIL_API_KEY,
         },
-    }
+    )
 ]
 
 
@@ -108,6 +109,7 @@ def index():
             input=message,
             instructions="Use the Email tool",
             previous_response_id=previous_id,
+            reasoning={"summary": "auto"},
         )
 
         history = session.get("history", [])
