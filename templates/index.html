@@ -132,6 +132,12 @@
                 const chat = document.querySelector('.chat-container');
                 const textarea = this.querySelector('textarea');
                 const textValue = textarea.value;
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = textarea.name;
+                hidden.value = textValue;
+                this.appendChild(hidden);
+                textarea.removeAttribute('name');
                 textarea.value = '';
                 const userMsg = document.createElement('div');
                 userMsg.className = 'message';
