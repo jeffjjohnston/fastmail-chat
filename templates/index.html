@@ -16,6 +16,20 @@
         button { border: none; border-radius: 5px; padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .reasoning-icon { margin-left: 5px; cursor: pointer; }
         .reasoning-summary { display: none; background: #ffffff; border: 1px solid #ccc; border-radius: 5px; padding: 5px; margin-top: 5px; font-size: 0.9em; }
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #333;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -42,7 +56,7 @@
     </div>
     <form method="post">
         <textarea name="message" rows="3" required></textarea>
-        <button type="submit" class="send-btn">✉️<span>Send</span></button>
+        <button type="submit" class="send-btn">✉️<span>Send</span><span class="spinner"></span></button>
         <button type="submit" name="action" value="clear" formnovalidate class="clear-btn">🗑️<span>Clear</span></button>
     </form>
     <script>
@@ -54,6 +68,17 @@
                 summary.style.display = 'none';
             }
         }
+
+        document.querySelector('form').addEventListener('submit', function(evt) {
+            const submitter = evt.submitter;
+            if (submitter && submitter.classList.contains('send-btn')) {
+                const sendBtn = submitter;
+                const clearBtn = document.querySelector('.clear-btn');
+                sendBtn.disabled = true;
+                clearBtn.disabled = true;
+                sendBtn.querySelector('.spinner').style.display = 'inline-block';
+            }
+        });
     </script>
 </body>
 </html>
