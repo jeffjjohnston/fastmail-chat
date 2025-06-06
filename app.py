@@ -4,12 +4,12 @@ tasks.
 """
 
 import os
-import re
 from flask import Flask, render_template, request, redirect, url_for, session
+import markdown
 from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.responses.tool_param import Mcp
-from markupsafe import Markup, escape
+from markupsafe import Markup
 
 load_dotenv()
 
@@ -22,42 +22,16 @@ if not app.secret_key:
     )
 
 
-# Simple markdown renderer for basic formatting
+# Markdown renderer using python-markdown
 @app.template_filter("markdown")
 def render_markdown(text: str) -> Markup:
-    """Convert a small subset of Markdown to HTML."""
-    text = escape(text)
-
-    # fenced code blocks
-    text = re.sub(r"```(.*?)```", r"<pre><code>\1</code></pre>", text, flags=re.S)
-    # inline code
-    text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
-    # bold
-    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
-    # emphasis
-    text = re.sub(r"\*(.+?)\*", r"<em>\1</em>", text)
-    text = re.sub(r"_(.+?)_", r"<em>\1</em>", text)
-
-    # simple bullet lists
-    lines = text.splitlines()
-    processed = []
-    in_list = False
-    for line in lines:
-        if re.match(r"^\s*[-*] ", line):
-            if not in_list:
-                processed.append("<ul>")
-                in_list = True
-            item = re.sub(r"^\s*[-*]\s+", "", line)
-            processed.append(f"<li>{item}</li>")
-        else:
-            if in_list:
-                processed.append("</ul>")
-                in_list = False
-            processed.append(line)
-    if in_list:
-        processed.append("</ul>")
-
-    return Markup("<br>".join(processed))
+    """Convert Markdown text to HTML using python-markdown."""
+    html = markdown.markdown(
+        text,
+        extensions=["fenced_code", "codehilite", "tables"],
+        output_format="html5",
+    )
+    return Markup(html)
 
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
