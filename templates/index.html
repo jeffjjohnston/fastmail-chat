@@ -95,11 +95,13 @@
 
                 const chat = document.querySelector('.chat-container');
                 const textarea = this.querySelector('textarea');
+                const textValue = textarea.value;
+                textarea.value = '';
                 const userMsg = document.createElement('div');
                 userMsg.className = 'message';
                 const userBubble = document.createElement('div');
                 userBubble.className = 'bubble user';
-                userBubble.textContent = textarea.value;
+                userBubble.textContent = textValue;
                 userMsg.appendChild(userBubble);
                 chat.appendChild(userMsg);
 
