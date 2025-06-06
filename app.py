@@ -5,7 +5,6 @@ tasks.
 
 import os
 import re
-import json
 from flask import Flask, render_template, request, redirect, url_for, session
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -134,11 +133,13 @@ def index():
                     summaries.append(summary.text)
 
         history = session.get("history", [])
-        history.append({
-            "user": message,
-            "assistant": resp.output_text,
-            "reasoning": summaries,
-        })
+        history.append(
+            {
+                "user": message,
+                "assistant": resp.output_text,
+                "reasoning": summaries,
+            }
+        )
         session["history"] = history
         session["previous_response_id"] = resp.id
 
