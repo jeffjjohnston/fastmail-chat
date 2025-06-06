@@ -9,10 +9,11 @@
         .chat-container { max-width: 700px; margin: 0 auto; }
         .message { display: flex; margin-bottom: 10px; }
         .bubble { padding: 10px; border-radius: 10px; max-width: 70%; }
-        .user { background: #dcf8c6; margin-left: auto; text-align: right; }
+        .user { background: #dbe8ff; margin-left: auto; text-align: right; }
         .assistant { background: #f1f0f0; margin-right: auto; }
-        form { display: flex; gap: 10px; margin-top: 20px; }
-        textarea { flex: 1; padding: 10px; }
+        form { display: flex; gap: 10px; margin-top: 20px; max-width: 700px; margin-left: auto; margin-right: auto; }
+        textarea { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        button { border: none; border-radius: 5px; padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
     </style>
 </head>
 <body>
@@ -29,8 +30,8 @@
     </div>
     <form method="post">
         <textarea name="message" rows="3" required></textarea>
-        <button type="submit">Send</button>
-        <button type="submit" name="action" value="clear" formnovalidate>Clear Conversation</button>
+        <button type="submit" class="send-btn">✉️<span>Send</span></button>
+        <button type="submit" name="action" value="clear" formnovalidate class="clear-btn">🗑️<span>Clear</span></button>
     </form>
 </body>
 </html>
