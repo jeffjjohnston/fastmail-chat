@@ -91,10 +91,22 @@ TOOLS = [
     )
 ]
 
+MODELS = [
+    "gpt-4o",
+    "gpt-4o-mini",
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-4.1-nano",
+    "o4-mini",
+    "o3",
+]
+DEFAULT_MODEL = "gpt-4o-mini"
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     """Main route for the application."""
+    selected_model = session.get("model", DEFAULT_MODEL)
     if request.method == "POST":
         if request.form.get("action") == "clear":
             session.pop("previous_response_id", None)
@@ -102,10 +114,12 @@ def index():
             return redirect(url_for("index"))
 
         message = request.form.get("message", "")
+        selected_model = request.form.get("model", selected_model)
+        session["model"] = selected_model
         previous_id = session.get("previous_response_id")
 
         resp = client.responses.create(
-            model="gpt-4o-mini",
+            model=selected_model,
             tools=TOOLS,
             input=message,
             instructions="Use the Email tool",
@@ -131,7 +145,12 @@ def index():
         return redirect(url_for("index"))
 
     history = session.get("history", [])
-    return render_template("index.html", history=history)
+    return render_template(
+        "index.html",
+        history=history,
+        models=MODELS,
+        selected_model=selected_model,
+    )
 
 
 if __name__ == "__main__":
