@@ -126,7 +126,16 @@
                 const select = document.querySelector('select[name="model"]');
                 sendBtn.disabled = true;
                 clearBtn.disabled = true;
-                if (select) select.disabled = true;
+                if (select) {
+                    const modelValue = select.value;
+                    const hiddenModel = document.createElement('input');
+                    hiddenModel.type = 'hidden';
+                    hiddenModel.name = select.name;
+                    hiddenModel.value = modelValue;
+                    this.appendChild(hiddenModel);
+                    select.disabled = true;
+                    select.removeAttribute('name');
+                }
                 sendBtn.querySelector('.spinner').style.display = 'inline-block';
 
                 const chat = document.querySelector('.chat-container');

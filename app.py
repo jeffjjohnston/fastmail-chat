@@ -81,14 +81,14 @@ def index():
     """Main route for the application."""
     selected_model = session.get("model", DEFAULT_MODEL)
     if request.method == "POST":
+        selected_model = request.form.get("model", selected_model)
+        session["model"] = selected_model
         if request.form.get("action") == "clear":
             session.pop("previous_response_id", None)
             session.pop("history", None)
             return redirect(url_for("index"))
 
         message = request.form.get("message", "")
-        selected_model = request.form.get("model", selected_model)
-        session["model"] = selected_model
         previous_id = session.get("previous_response_id")
 
         resp = client.responses.create(
