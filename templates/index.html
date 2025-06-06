@@ -77,6 +77,29 @@
                 sendBtn.disabled = true;
                 clearBtn.disabled = true;
                 sendBtn.querySelector('.spinner').style.display = 'inline-block';
+
+                const chat = document.querySelector('.chat-container');
+                const textarea = this.querySelector('textarea');
+                const userMsg = document.createElement('div');
+                userMsg.className = 'message';
+                const userBubble = document.createElement('div');
+                userBubble.className = 'bubble user';
+                userBubble.textContent = textarea.value;
+                userMsg.appendChild(userBubble);
+                chat.appendChild(userMsg);
+
+                const assistMsg = document.createElement('div');
+                assistMsg.className = 'message';
+                const assistBubble = document.createElement('div');
+                assistBubble.className = 'bubble assistant';
+                const spin = document.createElement('span');
+                spin.className = 'spinner';
+                spin.style.display = 'inline-block';
+                assistBubble.appendChild(spin);
+                assistMsg.appendChild(assistBubble);
+                chat.appendChild(assistMsg);
+
+                chat.scrollTop = chat.scrollHeight;
             }
         });
     </script>
