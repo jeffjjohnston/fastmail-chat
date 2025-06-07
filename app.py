@@ -11,6 +11,7 @@ from flask import (
     redirect,
     url_for,
     session,
+    jsonify,
     flash,
 )
 import markdown
@@ -90,14 +91,24 @@ def index():
     """Main route for the application."""
     selected_model = session.get("model", DEFAULT_MODEL)
     if request.method == "POST":
-        selected_model = request.form.get("model", selected_model)
+        if request.is_json:
+            data = request.get_json() or {}
+            selected_model = data.get("model", selected_model)
+            action = data.get("action")
+            message = data.get("message", "")
+        else:
+            selected_model = request.form.get("model", selected_model)
+            action = request.form.get("action")
+            message = request.form.get("message", "")
+
         session["model"] = selected_model
-        if request.form.get("action") == "clear":
+        if action == "clear":
             session.pop("previous_response_id", None)
             session.pop("history", None)
+            if request.is_json:
+                return jsonify({"cleared": True})
             return redirect(url_for("index"))
 
-        message = request.form.get("message", "")
         previous_id = session.get("previous_response_id")
 
         try:
@@ -129,6 +140,16 @@ def index():
         )
         session["history"] = history
         session["previous_response_id"] = resp.id
+
+        if request.is_json:
+            return jsonify(
+                {
+                    "assistant_html": str(render_markdown(resp.output_text)),
+                    "reasoning_html": [
+                        str(render_markdown(text)) for text in summaries
+                    ],
+                }
+            )
 
         return redirect(url_for("index"))
 
