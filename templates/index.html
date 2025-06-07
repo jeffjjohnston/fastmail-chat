@@ -172,5 +172,13 @@
             }
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chat = document.querySelector('.chat-container');
+            if (chat) {
+                chat.scrollTop = chat.scrollHeight;
+            }
+        });
+    </script>
 </body>
 </html>
