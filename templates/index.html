@@ -71,10 +71,21 @@
         }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
         h1 { text-align: center; }
+        .flash { max-width: 700px; margin: 10px auto; padding: 10px; border-radius: 5px; }
+        .flash.error { background: #fdd; border: 1px solid #f99; }
     </style>
 </head>
 <body>
     <h1>Fastmail Chat</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flashes">
+        {% for category, msg in messages %}
+        <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="chat-container">
     {% for item in history %}
         <div class="message">
