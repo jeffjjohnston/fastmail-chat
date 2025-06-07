@@ -71,10 +71,21 @@
         }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
         h1 { text-align: center; }
+        .flash { max-width: 700px; margin: 10px auto; padding: 10px; border-radius: 5px; }
+        .flash.error { background: #fdd; border: 1px solid #f99; }
     </style>
 </head>
 <body>
     <h1>Fastmail Chat</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flashes">
+        {% for category, msg in messages %}
+        <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="chat-container">
     {% for item in history %}
         <div class="message">
@@ -84,7 +95,7 @@
             <div class="bubble assistant">
                 {{ item.assistant | markdown }}
                 {% if item.reasoning and item.reasoning|length > 0 %}
-                <span class="reasoning-icon" onclick="toggleReasoning(this)">💭</span>
+                <span class="reasoning-icon" role="button" aria-label="Toggle reasoning" onclick="toggleReasoning(this)">💭</span>
                 <div class="reasoning-summary">
                     {% for text in item.reasoning %}
                         <p>{{ text | markdown }}</p>
@@ -96,7 +107,7 @@
     {% endfor %}
     </div>
     <form method="post">
-        <textarea name="message" rows="3" required></textarea>
+        <textarea name="message" rows="3" required placeholder="Type your question..."></textarea>
         <div class="controls">
             <div class="button-row">
                 <button type="submit" class="send-btn">✉️<span>Send</span><span class="spinner"></span></button>
@@ -200,6 +211,14 @@
                 clearBtn.disabled = false;
                 if (select) select.disabled = false;
                 sendBtn.querySelector('.spinner').style.display = 'none';
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chat = document.querySelector('.chat-container');
+            if (chat) {
+                chat.scrollTop = chat.scrollHeight;
             }
         });
     </script>

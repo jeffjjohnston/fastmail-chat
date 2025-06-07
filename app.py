@@ -12,6 +12,7 @@ from flask import (
     url_for,
     session,
     jsonify,
+    flash,
 )
 import markdown
 from dotenv import load_dotenv
@@ -110,14 +111,18 @@ def index():
 
         previous_id = session.get("previous_response_id")
 
-        resp = client.responses.create(
-            model=selected_model,
-            tools=TOOLS,
-            input=message,
-            instructions=OPENAI_INSTRUCTIONS,
-            previous_response_id=previous_id,
-            reasoning={"summary": "auto"},
-        )
+        try:
+            resp = client.responses.create(
+                model=selected_model,
+                tools=TOOLS,
+                input=message,
+                instructions=OPENAI_INSTRUCTIONS,
+                previous_response_id=previous_id,
+                reasoning={"summary": "auto"},
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            flash(f"Error contacting OpenAI: {exc}", "error")
+            return redirect(url_for("index"))
 
         summaries: list[str] = []
         for output in resp.output:
