@@ -84,7 +84,7 @@
             <div class="bubble assistant">
                 {{ item.assistant | markdown }}
                 {% if item.reasoning and item.reasoning|length > 0 %}
-                <span class="reasoning-icon" onclick="toggleReasoning(this)">💭</span>
+                <span class="reasoning-icon" role="button" aria-label="Toggle reasoning" onclick="toggleReasoning(this)">💭</span>
                 <div class="reasoning-summary">
                     {% for text in item.reasoning %}
                         <p>{{ text | markdown }}</p>
