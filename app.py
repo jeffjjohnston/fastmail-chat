@@ -13,33 +13,18 @@ from markupsafe import Markup
 
 load_dotenv()
 
-app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
-if not app.secret_key:
-    raise RuntimeError(
-        "SECRET_KEY environment variable is not set. "
-        "Please set it to a strong, secure value."
-    )
-
-
-# Markdown renderer using python-markdown
-@app.template_filter("markdown")
-def render_markdown(text: str) -> Markup:
-    """Convert Markdown text to HTML using python-markdown."""
-    html = markdown.markdown(
-        text,
-        extensions=["fenced_code", "codehilite", "tables"],
-        output_format="html5",
-    )
-    return Markup(html)
-
-
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 BEARER_TOKEN = os.getenv("BEARER_TOKEN")
 FASTMAIL_API_KEY = os.getenv("FASTMAIL_API_KEY")
 MCP_SERVER_URL = os.getenv("MCP_SERVER_URL")
+APP_SECRET_KEY = os.getenv("SECRET_KEY")
 
 # Validate environment variables
+if not APP_SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY environment variable is not set. "
+        "Please set it to a strong, secure value."
+    )
 if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
 if not BEARER_TOKEN:
@@ -50,6 +35,19 @@ if not MCP_SERVER_URL:
     raise RuntimeError("MCP_SERVER_URL environment variable is not set.")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
+
+OPENAI_INSTRUCTIONS = "Use the Email tool. Assume email is from the user's own mailbox."
+
+MODELS = [
+    "gpt-4o",
+    "gpt-4o-mini",
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-4.1-nano",
+    "o4-mini",
+    "o3",
+]
+DEFAULT_MODEL = "gpt-4o-mini"
 
 TOOLS = [
     Mcp(
@@ -64,16 +62,19 @@ TOOLS = [
     )
 ]
 
-MODELS = [
-    "gpt-4o",
-    "gpt-4o-mini",
-    "gpt-4.1",
-    "gpt-4.1-mini",
-    "gpt-4.1-nano",
-    "o4-mini",
-    "o3",
-]
-DEFAULT_MODEL = "gpt-4o-mini"
+app = Flask(__name__)
+app.secret_key = APP_SECRET_KEY
+
+
+@app.template_filter("markdown")
+def render_markdown(text: str) -> Markup:
+    """Convert Markdown text to HTML using python-markdown."""
+    html = markdown.markdown(
+        text,
+        extensions=["fenced_code", "codehilite", "tables"],
+        output_format="html",
+    )
+    return Markup(html)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -95,7 +96,7 @@ def index():
             model=selected_model,
             tools=TOOLS,
             input=message,
-            instructions="Use the Email tool",
+            instructions=OPENAI_INSTRUCTIONS,
             previous_response_id=previous_id,
             reasoning={"summary": "auto"},
         )
