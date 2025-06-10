@@ -16,7 +16,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Set the following environment variables:
+Set the following environment variables in your shell or use a `.env` file:
 
 - `OPENAI_API_KEY` – your OpenAI API key
 - `BEARER_TOKEN` – bearer token for the MCP server
