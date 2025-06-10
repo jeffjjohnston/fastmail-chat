@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fastmail Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .chat-container { max-width: 700px; margin: 0 auto; }
+        .message { display: flex; margin-bottom: 10px; }
+        .bubble { padding: 10px; border-radius: 10px; max-width: 70%; }
+        .user { background: #dbe8ff; margin-left: auto; text-align: right; }
+        .assistant { background: #f1f0f0; margin-right: auto; }
+        form { display: flex; gap: 10px; margin-top: 20px; max-width: 700px; margin-left: auto; margin-right: auto; }
+        textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            height: 100px;
+        }
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            width: 100%;
+        }
+        button {
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 1rem;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            height: 100px;
+            gap: 10px;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+        .button-row button {
+            flex: 1;
+        }
+        .controls select {
+            flex: 1;
+        }
+        .reasoning-icon { margin-left: 5px; cursor: pointer; }
+        .reasoning-summary { display: none; background: #ffffff; border: 1px solid #ccc; border-radius: 5px; padding: 5px; margin-top: 5px; font-size: 0.9em; }
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #333;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        h1 { text-align: center; }
+        .flash { max-width: 700px; margin: 10px auto; padding: 10px; border-radius: 5px; }
+        .flash.error { background: #fdd; border: 1px solid #f99; }
+    </style>
+</head>
+<body>
+    <h1>Fastmail Chat</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flashes">
+        {% for category, msg in messages %}
+        <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    <div class="chat-container">
+    {% for item in history %}
+        <div class="message">
+            <div class="bubble user">{{ item.user | e }}</div>
+        </div>
+        <div class="message">
+            <div class="bubble assistant">
+                {{ item.assistant | markdown }}
+                {% if item.reasoning and item.reasoning|length > 0 %}
+                <span class="reasoning-icon" role="button" aria-label="Toggle reasoning" onclick="toggleReasoning(this)">💭</span>
+                <div class="reasoning-summary">
+                    {% for text in item.reasoning %}
+                        <p>{{ text | markdown }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+    <form method="post">
+        <textarea name="message" rows="3" required placeholder="Type your question..."></textarea>
+        <div class="controls">
+            <div class="button-row">
+                <button type="submit" class="send-btn">✉️<span>Send</span><span class="spinner"></span></button>
+                <button type="submit" name="action" value="clear" formnovalidate class="clear-btn">🗑️<span>Clear</span></button>
+            </div>
+            <select name="model">
+                {% for model in models %}
+                <option value="{{ model }}" {% if selected_model == model %}selected{% endif %}>{{ model }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+    <script>
+        function toggleReasoning(el) {
+            const summary = el.nextElementSibling;
+            if (summary.style.display === 'none' || summary.style.display === '') {
+                summary.style.display = 'block';
+            } else {
+                summary.style.display = 'none';
+            }
+        }
+
+        const form = document.querySelector('form');
+        form.addEventListener('submit', async function(evt) {
+            const submitter = evt.submitter;
+            if (!submitter || !submitter.classList.contains('send-btn')) {
+                return;
+            }
+            evt.preventDefault();
+
+            const sendBtn = submitter;
+            const clearBtn = document.querySelector('.clear-btn');
+            const select = document.querySelector('select[name="model"]');
+            const textarea = this.querySelector('textarea');
+            const chat = document.querySelector('.chat-container');
+
+            sendBtn.disabled = true;
+            clearBtn.disabled = true;
+            if (select) select.disabled = true;
+            sendBtn.querySelector('.spinner').style.display = 'inline-block';
+
+            const textValue = textarea.value;
+            const modelValue = select ? select.value : '';
+            textarea.value = '';
+
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message';
+            const userBubble = document.createElement('div');
+            userBubble.className = 'bubble user';
+            userBubble.textContent = textValue;
+            userMsg.appendChild(userBubble);
+            chat.appendChild(userMsg);
+
+            const assistMsg = document.createElement('div');
+            assistMsg.className = 'message';
+            const assistBubble = document.createElement('div');
+            assistBubble.className = 'bubble assistant';
+            const spin = document.createElement('span');
+            spin.className = 'spinner';
+            spin.style.display = 'inline-block';
+            assistBubble.appendChild(spin);
+            assistMsg.appendChild(assistBubble);
+            chat.appendChild(assistMsg);
+
+            chat.scrollTop = chat.scrollHeight;
+
+            try {
+                const response = await fetch('/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ message: textValue, model: modelValue })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    assistBubble.innerHTML = data.assistant_html;
+                    if (data.reasoning_html && data.reasoning_html.length) {
+                        const icon = document.createElement('span');
+                        icon.className = 'reasoning-icon';
+                        icon.textContent = '💭';
+                        icon.onclick = function() { toggleReasoning(icon); };
+                        const summary = document.createElement('div');
+                        summary.className = 'reasoning-summary';
+                        data.reasoning_html.forEach(function(html) {
+                            const p = document.createElement('p');
+                            p.innerHTML = html;
+                            summary.appendChild(p);
+                        });
+                        assistBubble.appendChild(icon);
+                        assistBubble.appendChild(summary);
+                    }
+                } else {
+                    assistBubble.textContent = 'Error: ' + response.statusText;
+                }
+            } catch (err) {
+                assistBubble.textContent = 'Error sending request';
+            } finally {
+                sendBtn.disabled = false;
+                clearBtn.disabled = false;
+                if (select) select.disabled = false;
+                sendBtn.querySelector('.spinner').style.display = 'none';
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chat = document.querySelector('.chat-container');
+            if (chat) {
+                chat.scrollTop = chat.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
