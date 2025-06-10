@@ -175,16 +175,14 @@
             chat.scrollTop = chat.scrollHeight;
 
             try {
-                const response = await fetch('/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ message: textValue, model: modelValue })
-                });
-                if (response.ok) {
-                    const data = await response.json();
+                const es = new EventSource('/stream?model=' + encodeURIComponent(modelValue) + '&message=' + encodeURIComponent(textValue));
+                es.onmessage = function(e) {
+                    assistBubble.textContent += e.data;
+                    chat.scrollTop = chat.scrollHeight;
+                };
+                es.addEventListener('end', function(ev) {
+                    es.close();
+                    const data = JSON.parse(ev.data);
                     assistBubble.innerHTML = data.assistant_html;
                     if (data.reasoning_html && data.reasoning_html.length) {
                         const icon = document.createElement('span');
@@ -201,12 +199,13 @@
                         assistBubble.appendChild(icon);
                         assistBubble.appendChild(summary);
                     }
-                } else {
-                    assistBubble.textContent = 'Error: ' + response.statusText;
-                }
+                    sendBtn.disabled = false;
+                    clearBtn.disabled = false;
+                    if (select) select.disabled = false;
+                    sendBtn.querySelector('.spinner').style.display = 'none';
+                });
             } catch (err) {
                 assistBubble.textContent = 'Error sending request';
-            } finally {
                 sendBtn.disabled = false;
                 clearBtn.disabled = false;
                 if (select) select.disabled = false;

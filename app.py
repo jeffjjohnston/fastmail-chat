@@ -13,12 +13,15 @@ from flask import (
     session,
     jsonify,
     flash,
+    Response,
+    stream_with_context,
 )
 import markdown
 from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.responses.tool_param import Mcp
 from markupsafe import Markup
+import json
 
 load_dotenv()
 
@@ -160,6 +163,66 @@ def index():
         models=MODELS,
         selected_model=selected_model,
     )
+
+
+@app.route("/stream", methods=["GET", "POST"])
+def stream():
+    """Stream OpenAI response as server-sent events."""
+    if request.method == "POST":
+        data = request.get_json() or {}
+        selected_model = data.get("model", session.get("model", DEFAULT_MODEL))
+        message = data.get("message", "")
+    else:
+        selected_model = request.args.get("model", session.get("model", DEFAULT_MODEL))
+        message = request.args.get("message", "")
+
+    session["model"] = selected_model
+
+    def generate():
+        previous_id = session.get("previous_response_id")
+        with client.responses.stream(
+            model=selected_model,
+            tools=TOOLS,
+            input=message,
+            instructions=OPENAI_INSTRUCTIONS,
+            previous_response_id=previous_id,
+            reasoning={"summary": "auto"},
+        ) as stream:
+            full_text = ""
+            for chunk in stream:
+                if (
+                    chunk.type == "response.output_text.delta"
+                    and getattr(chunk, "delta", None)
+                ):
+                    full_text += chunk.delta
+                    yield f"data:{chunk.delta}\n\n"
+
+            resp = stream.get_final_response()
+
+        summaries: list[str] = []
+        for output in resp.output:
+            if output.type == "reasoning" and getattr(output, "summary", None):
+                for summary in output.summary:
+                    summaries.append(summary.text)
+
+        history = session.get("history", [])
+        history.append(
+            {
+                "user": message,
+                "assistant": full_text,
+                "reasoning": summaries,
+            }
+        )
+        session["history"] = history
+        session["previous_response_id"] = resp.id
+
+        end_data = {
+            "assistant_html": str(render_markdown(full_text)),
+            "reasoning_html": [str(render_markdown(text)) for text in summaries],
+        }
+        yield "event: end\n" + f"data:{json.dumps(end_data)}\n\n"
+
+    return Response(stream_with_context(generate()), mimetype="text/event-stream")
 
 
 if __name__ == "__main__":
