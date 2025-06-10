@@ -2,7 +2,7 @@
 
 ![Fastmail Chat Screenshot](images/fastmail-chat-browser.png)
 
-A web-based chat interface that let's you ask OpenAI models about your Fastmail messages. Requires a [Fastmail MCP server](https://github.com/jeffjjohnston/fastmail-mcp-server).
+A web-based chat interface that let's you ask OpenAI models about your [Fastmail](https://www.fastmail.com) messages. Requires a [Fastmail MCP server](https://github.com/jeffjjohnston/fastmail-mcp-server).
 
 ## Setup
 
@@ -22,7 +22,7 @@ Set the following environment variables:
 - `BEARER_TOKEN` – bearer token for the MCP server
 - `FASTMAIL_API_KEY` – Fastmail API key
 - `MCP_SERVER_URL` – URL of the Fastmail MCP server
-- `SECRET_KEY` – Flask session secret
+- `SECRET_KEY` – Define a session secret for the chat server (you won't need it anywhere else)
 
 To obtain a Fastmail API key, login to your Fastmail account and navigate to Settings -> Privacy & Security -> **Connected apps & API tokens**.
 
@@ -32,4 +32,4 @@ Run the server with:
 python app.py
 ```
 
-The web app is available at <http://127.0.0.1:5000>.
+Open your browser and navigate to <http://127.0.0.1:5000>.
